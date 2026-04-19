@@ -5,7 +5,7 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<title>寵湯寵物澡堂 - 寵物美容服務定型化契約</title>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 	<style>
 		@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;800&display=swap');
 
@@ -201,7 +201,8 @@
 		.checkRow {
 			display: flex;
 			gap: 12px;
-			margin-top: 14px
+			margin-top: 14px;
+			align-items: center
 		}
 
 		.checkRow input {
@@ -625,6 +626,17 @@
 			display: inline-block;
 			margin-bottom: 12px
 		}
+
+		.contract-hint {
+			font-size: 12px;
+			color: var(--muted);
+			margin-top: 5px;
+			margin-left: 28px
+		}
+
+		.contract-hint.success {
+			color: #5A9B7A
+		}
 	</style>
 </head>
 
@@ -788,6 +800,7 @@
 				<input id="agree" type="checkbox">
 				<label for="agree">我已完整閱讀並同意上述契約內容</label>
 			</div>
+			<div id="contractHint" class="contract-hint">📜 請將契約內容滾動到底部，即可勾選同意</div>
 		</div>
 		<div class="progress-container">
 			<div class="progress-bar">
@@ -1133,6 +1146,7 @@
 			isSubmitting = false,
 			autoSaveTimer = null,
 			submittedCount = 0;
+		let hasReadContract = false;
 
 		function isOnline() { return navigator.onLine }
 
@@ -1148,6 +1162,7 @@
 			fd.signatureDataUrl = signatureDataUrl;
 			fd.agreeChecked = document.getElementById('agree')?.checked || false;
 			fd.submittedCount = submittedCount;
+			fd.hasReadContract = hasReadContract;
 			localStorage.setItem('petGroomingFormData', JSON.stringify(fd));
 			showSavingIndicator() }
 
@@ -1156,10 +1171,11 @@
 								pi = document.getElementById('previewImg'),
 								ob = document.getElementById('openSignatureBtn'); if (pi && signatureDataUrl) { pi.src = signatureDataUrl;
 								pv.style.display = 'block'; if (ob) ob.style.display = 'none' } } } else if (k === 'agreeChecked') { const a = document.getElementById('agree'); if (a) a.checked = fd[k] } else if (k === 'submittedCount') { submittedCount = fd[k];
-						updateSentCounter() } else { const el = document.getElementById(k); if (el) { if (el.type === 'checkbox') el.checked = fd[k];
+						updateSentCounter() } else if (k === 'hasReadContract') { hasReadContract = fd[k] } else { const el = document.getElementById(k); if (el) { if (el.type === 'checkbox') el.checked = fd[k];
 							else if (el.type === 'radio') { const re = document.querySelector(`input[name="${k}"][value="${fd[k]}"]`); if (re) re.checked = true } else el.value = fd[k] } } });
 				triggerConditionalDisplay();
-				updateProgress() } catch (e) { console.warn(e) } }
+				updateProgress();
+				setupContractScrollLock() } catch (e) { console.warn(e) } }
 
 		function updateSentCounter() { const c = document.getElementById('sentCounter'); if (c) c.textContent = `📋 已送出 ${submittedCount} 隻寵物` }
 
@@ -1216,6 +1232,17 @@
 
 		function markErrorStyle(f) { f?.classList.add('input-error') }
 
+		function setupContractScrollLock() { const card = document.querySelector('.contractScrollCard'); const cb = document.getElementById('agree'); const hint = document.getElementById('contractHint'); if (!card || !cb) return; if (hasReadContract) { cb.disabled = false; if (hint) { hint.innerHTML = '✓ 已閱讀完畢，可勾選同意';
+					hint.classList.add('success') } return } cb.disabled = true;
+			cb.checked = false; if (hint) { hint.innerHTML = '📜 請將契約內容滾動到底部，即可勾選同意';
+				hint.classList.remove('success') }
+
+			function checkScroll() { if (card.scrollTop + card.clientHeight >= card.scrollHeight - 10) { cb.disabled = false;
+					card.removeEventListener('scroll', checkScroll);
+					hasReadContract = true; if (hint) { hint.innerHTML = '✓ 已閱讀完畢，可勾選同意';
+						hint.classList.add('success') } autoSave() } } card.addEventListener('scroll', checkScroll);
+			checkScroll() }
+
 		function clearPetOnlyFields() { document.getElementById('petName').value = '';
 			document.getElementById('petBreed').value = '';
 			document.getElementById('petAgeYears').value = '';
@@ -1264,9 +1291,12 @@
 			document.getElementById('vetAddress').value = '';
 			clearPetOnlyFields();
 			submittedCount = 0;
+			hasReadContract = false;
 			updateSentCounter(); const s = localStorage.getItem('petGroomingFormData'); if (s) { try { const fd = JSON.parse(s);
 					fd.submittedCount = 0;
-					localStorage.setItem('petGroomingFormData', JSON.stringify(fd)) } catch (e) {} } updateProgress() }
+					fd.hasReadContract = false;
+					localStorage.setItem('petGroomingFormData', JSON.stringify(fd)) } catch (e) {} } updateProgress();
+			setupContractScrollLock() }
 
 		function updatePayTotal() { const c = document.getElementById("payAmountCash"),
 				t = document.getElementById("payAmountTransfer"),
@@ -1506,6 +1536,7 @@
 					autoSave() })) });
 			loadFormFromLocal();
 			updateProgress();
+			setupContractScrollLock();
 			setInterval(() => autoSave(), 30000);
 			updateSentCounter() });
 	</script>
