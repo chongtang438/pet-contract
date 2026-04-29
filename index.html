@@ -829,9 +829,15 @@
 					<div class="miniLabel">緊急聯絡人電話<span style="color:var(--danger);">*</span></div><input id="emergencyPhone" class="input required-field" inputmode="tel" placeholder="例：0912345678 或 07-1234567" data-label="緊急聯絡人電話">
 				</div>
 			</div>
-			<div class="label">Email（寄送附本用）</div>
-			<input id="ownerEmail" class="input" inputmode="email" placeholder="例：abc@gmail.com（沒有可不填）">
-			<div style="font-size:12px;color:var(--muted);margin-top:4px">※ 如有填寫，將寄送契約副本供您留存</div>
+			<div class="label">Email（寄送附本用，選填）</div>
+<input id="ownerEmail" class="input" inputmode="email" placeholder="例：abc@gmail.com（沒有可不填）">
+<div style="font-size:12px;color:var(--muted);margin-top:4px">※ 如有填寫，將寄送契約副本供您留存</div>
+
+<div id="emailConfirmWrap" style="display:none;">
+  <div class="label">確認 Email</div>
+  <input id="ownerEmailConfirm" class="input" inputmode="email" placeholder="請再次輸入相同 Email">
+  <div id="emailErrorMsg" style="color:var(--danger); font-size:12px; margin-top:4px; display:none;">⚠️ 兩次輸入的信箱不一致，請確認</div>
+</div>
 			<div class="label">是否為飼主本人</div>
 			<div class="choiceRow" id="isOwnerSelfRow">
 				<label class="choice"><input type="radio" name="isOwnerSelf" value="是" checked>是</label>
@@ -1140,7 +1146,7 @@
 		</div>
 	</div>
 	<script>
-		const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsIjG9_9pKA665U-2ryR14lOy9ZYjok-dtuiOQH6_F3GgZkTjp4GWC2R9bZpZEu9w4pA/exec";
+		const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz9XRZj_rg7iPpOXLGxjmlXq1wgbme4PxxtpegXvBMMsILe3Iu1xEhhwHnQTRf0M_VgEg/exec";
 		const STORE_VET = { name: "臻愛一生寵物綜合醫療動物醫院", phone: "07-3430017", address: "高雄市左營區華夏路1062號" };
 		let signatureDataUrl = "",
 			isSubmitting = false,
@@ -1348,80 +1354,216 @@
 			t.innerHTML = msg + ' <button onclick="this.parentElement.remove()">✕</button>';
 			document.body.appendChild(t);
 			setTimeout(() => t.remove(), 3000) }
-		async function handleSubmit() { const sb = document.getElementById("submit"),
-				msg = document.getElementById("msg"),
-				agree = document.getElementById("agree"); if (isSubmitting) { if (msg) msg.textContent = "⚠️ 資料正在送出中，請稍候..."; return } if (!isOnline()) { if (msg) msg.textContent = "⚠️ 網路連線中斷，請檢查網路後再試一次。\n您的資料已暫存在本機，不會遺失。"; return } const ownerName = document.getElementById("ownerName"),
-				ownerIdNo = document.getElementById("ownerIdNo"),
-				ownerPhone = document.getElementById("ownerPhone"),
-				ownerEmail = document.getElementById("ownerEmail"),
-				ownerAddress = document.getElementById("ownerAddress"),
-				emergencyName = document.getElementById("emergencyName"),
-				emergencyPhone = document.getElementById("emergencyPhone"),
-				ownerRelation = document.getElementById("ownerRelation"); const petName = document.getElementById("petName"),
-				petBreed = document.getElementById("petBreed"),
-				petAgeYears = document.getElementById("petAgeYears"),
-				petAgeMonths = document.getElementById("petAgeMonths"),
-				petBirthday = document.getElementById("petBirthday"),
-				petWeight = document.getElementById("petWeight"),
-				signDate = document.getElementById("signDate"),
-				chipNo = document.getElementById("chipNo"),
-				petTemperamentNote = document.getElementById("petTemperamentNote"); const otherInjury = document.getElementById("otherInjury"),
-				otherText = document.getElementById("otherInjuryText"); const vetName = document.getElementById("vetName"),
-				vetPhone = document.getElementById("vetPhone"),
-				vetAddress = document.getElementById("vetAddress"); const svcWashOther = document.getElementById("svcWashOther"),
-				svcWashOtherText = document.getElementById("svcWashOtherText"),
-				svcWashOtherAmount = document.getElementById("svcWashOtherAmount"); const serviceOtherNote = document.getElementById("serviceOtherNote"),
-				serviceOtherAmount = document.getElementById("serviceOtherAmount"),
-				payDate = document.getElementById("payDate"),
-				payTotalText = document.getElementById("payTotalText"); const svcWashBoxes = Array.from(document.querySelectorAll(".svcWash")),
-				svcGroomBoxes = Array.from(document.querySelectorAll(".svcGroom")),
-				svcExtraBoxes = Array.from(document.querySelectorAll(".svcExtra")),
-				svcSingleBoxes = Array.from(document.querySelectorAll(".svcSingle"));
+		async function handleSubmit() { 
+  const sb = document.getElementById("submit"),
+        msg = document.getElementById("msg"),
+        agree = document.getElementById("agree"),
+        emailErrorMsg = document.getElementById("emailErrorMsg");
+  
+  if (isSubmitting) { 
+    if (msg) msg.textContent = "⚠️ 資料正在送出中，請稍候..."; 
+    return 
+  } 
+  if (!isOnline()) { 
+    if (msg) msg.textContent = "⚠️ 網路連線中斷，請檢查網路後再試一次。\n您的資料已暫存在本機，不會遺失。"; 
+    return 
+  } 
+  const ownerName = document.getElementById("ownerName"),
+        ownerIdNo = document.getElementById("ownerIdNo"),
+        ownerPhone = document.getElementById("ownerPhone"),
+        ownerEmail = document.getElementById("ownerEmail"),
+        ownerAddress = document.getElementById("ownerAddress"),
+        emergencyName = document.getElementById("emergencyName"),
+        emergencyPhone = document.getElementById("emergencyPhone"),
+        ownerRelation = document.getElementById("ownerRelation"); 
+  const petName = document.getElementById("petName"),
+        petBreed = document.getElementById("petBreed"),
+        petAgeYears = document.getElementById("petAgeYears"),
+        petAgeMonths = document.getElementById("petAgeMonths"),
+        petBirthday = document.getElementById("petBirthday"),
+        petWeight = document.getElementById("petWeight"),
+        signDate = document.getElementById("signDate"),
+        chipNo = document.getElementById("chipNo"),
+        petTemperamentNote = document.getElementById("petTemperamentNote"); 
+  const otherInjury = document.getElementById("otherInjury"),
+        otherText = document.getElementById("otherInjuryText"); 
+  const vetName = document.getElementById("vetName"),
+        vetPhone = document.getElementById("vetPhone"),
+        vetAddress = document.getElementById("vetAddress"); 
+  const svcWashOther = document.getElementById("svcWashOther"),
+        svcWashOtherText = document.getElementById("svcWashOtherText"),
+        svcWashOtherAmount = document.getElementById("svcWashOtherAmount"); 
+  const serviceOtherNote = document.getElementById("serviceOtherNote"),
+        serviceOtherAmount = document.getElementById("serviceOtherAmount"),
+        payDate = document.getElementById("payDate"),
+        payTotalText = document.getElementById("payTotalText"); 
+  const svcWashBoxes = Array.from(document.querySelectorAll(".svcWash")),
+        svcGroomBoxes = Array.from(document.querySelectorAll(".svcGroom")),
+        svcExtraBoxes = Array.from(document.querySelectorAll(".svcExtra")),
+        svcSingleBoxes = Array.from(document.querySelectorAll(".svcSingle"));
 
-			function setError(t, tf = null) { if (msg) { msg.textContent = t || "";
-					msg.style.color = "#C06B6B" } if (tf) { markErrorStyle(tf);
-					tf.focus();
-					tf.style.animation = 'shake 0.3s ease-in-out';
-					setTimeout(() => { clearErrorStyle(tf); if (tf) tf.style.animation = '' }, 3000) } isSubmitting = false; if (sb) { sb.disabled = false;
-					sb.textContent = "📨 送出此寵物";
-					sb.classList.remove('btn-submitting') } }
+  function setError(t, tf = null) { 
+    if (msg) { msg.textContent = t || "";
+      msg.style.color = "#C06B6B" 
+    } 
+    if (tf) { markErrorStyle(tf);
+      tf.focus();
+      tf.style.animation = 'shake 0.3s ease-in-out';
+      setTimeout(() => { clearErrorStyle(tf); if (tf) tf.style.animation = '' }, 3000) 
+    } 
+    isSubmitting = false; 
+    if (sb) { sb.disabled = false;
+      sb.textContent = "📨 送出此寵物";
+      sb.classList.remove('btn-submitting') 
+    } 
+  }
 
-			function setStep(t) { if (sb) sb.textContent = t; if (msg) { msg.textContent = t;
-					msg.style.color = "#5A4040" } }
+  function setStep(t) { 
+    if (sb) sb.textContent = t; 
+    if (msg) { msg.textContent = t;
+      msg.style.color = "#5A4040" 
+    } 
+  }
 
-			function resetSubmit() { isSubmitting = false; if (sb) { sb.disabled = false;
-					sb.textContent = "📨 送出此寵物";
-					sb.classList.remove('btn-submitting') } }
+  function resetSubmit() { 
+    isSubmitting = false; 
+    if (sb) { sb.disabled = false;
+      sb.textContent = "📨 送出此寵物";
+      sb.classList.remove('btn-submitting') 
+    } 
+  }
 
-			function requireValue(el, label) { if (!el) { setError("系統缺少欄位：" + label); return null } const v = String(el.value || "").trim(); if (!v) { setError("請填寫：" + label, el); return null } clearErrorStyle(el); return v } try { if (!agree || !agree.checked) { setError("請先勾選同意契約內容", agree); return } if (!signatureDataUrl) { setError("請先完成簽名"); return } setStep("🔍 正在驗證簽名..."); if (await isSignatureEmpty(signatureDataUrl)) { setError("請在簽名區域確實簽名，不能為空白"); return } if (sb) { sb.disabled = true;
-					sb.classList.add('btn-submitting') } isSubmitting = true;
-				setStep("📝 正在檢查資料..."); const isOwnerSelf = getRadio("isOwnerSelf") || "是",
-					chipHas = getRadio("chipHas") || "有",
-					neuterStatus = getRadio("neuterStatus") || "已絕育",
-					vetMode = getRadio("vetMode") || "甲方指定"; const medicalHistory = getMedicalHistory(),
-					otherInjuryNote = otherInjury?.checked ? String(otherText?.value || "").trim() : "",
-					bodyChecks = getBodyChecks(); const serviceWash = getServiceDetailList(svcWashBoxes),
-					serviceGroom = getServiceDetailList(svcGroomBoxes),
-					serviceExtra = getServiceDetailList(svcExtraBoxes),
-					serviceSingle = getServiceDetailList(svcSingleBoxes),
-					paymentDetails = getPaymentDetailList(); const svcWashOtherDetail = svcWashOther?.checked ? { item: String(svcWashOtherText?.value || "").trim() ? `其他：${svcWashOtherText.value.trim()}` : "其他", amount: String(svcWashOtherAmount?.value || "").trim() } : null; const serviceOtherDetail = String(serviceOtherNote?.value || "").trim() ? { item: String(serviceOtherNote.value).trim(), amount: String(serviceOtherAmount?.value || "").trim() } : null; const finalVetName = vetMode === "乙方指定" ? STORE_VET.name : String(vetName?.value || "").trim(),
-					finalVetPhone = vetMode === "乙方指定" ? STORE_VET.phone : String(vetPhone?.value || "").trim(),
-					finalVetAddress = vetMode === "乙方指定" ? STORE_VET.address : String(vetAddress?.value || "").trim(); const ownerNameVal = requireValue(ownerName, "甲方姓名"); if (!ownerNameVal) return; const ownerIdNoVal = requireValue(ownerIdNo, "身分證字號/居留證號"); if (!ownerIdNoVal) return; if (!validateIdNumber(ownerIdNoVal)) { setError("身分證字號/居留證號格式不正確", ownerIdNo); return resetSubmit() } const ownerPhoneVal = requireValue(ownerPhone, "聯絡電話"); if (!ownerPhoneVal) return; if (!validatePhone(ownerPhoneVal)) { setError("聯絡電話格式不正確（範例：0912345678 或 07-1234567）", ownerPhone); return resetSubmit() } const ownerAddressVal = requireValue(ownerAddress, "通訊地址"); if (!ownerAddressVal) return; const emergencyNameVal = requireValue(emergencyName, "緊急聯絡人"); if (!emergencyNameVal) return; const emergencyPhoneVal = requireValue(emergencyPhone, "緊急聯絡人電話"); if (!emergencyPhoneVal) return; if (!validatePhone(emergencyPhoneVal)) { setError("緊急聯絡人電話格式不正確", emergencyPhone); return resetSubmit() } const ownerEmailVal = String(ownerEmail?.value || "").trim(); if (ownerEmailVal !== "" && !isValidEmail(ownerEmailVal)) { setError("Email 格式不正確（範例：name@domain.com）", ownerEmail); return resetSubmit() } if (isOwnerSelf === "否") { const rel = requireValue(ownerRelation, "與飼主關係"); if (!rel) return } const petNameVal = requireValue(petName, "寵物姓名"); if (!petNameVal) return; const petBreedVal = requireValue(petBreed, "寵物品種"); if (!petBreedVal) return; const petAgeYearsVal = requireValue(petAgeYears, "寵物年齡(歲)"); if (!petAgeYearsVal) return; const petAgeYearsNum = parseInt(petAgeYearsVal); if (isNaN(petAgeYearsNum) || petAgeYearsNum < 0 || petAgeYearsNum > 50) { setError("寵物歲數請填寫 0-50 之間的數字", petAgeYears); return resetSubmit() } let petAgeDisplay = `${petAgeYearsNum}歲`; if (petAgeMonths && petAgeMonths.value.trim() !== "") { const petAgeMonthsNum = parseInt(petAgeMonths.value.trim()); if (isNaN(petAgeMonthsNum) || petAgeMonthsNum < 0 || petAgeMonthsNum > 11) { setError("寵物月數請填寫 0-11 之間的數字", petAgeMonths); return resetSubmit() } if (petAgeMonthsNum > 0) petAgeDisplay = `${petAgeYearsNum}歲${petAgeMonthsNum}個月` } const petWeightVal = requireValue(petWeight, "體重"); if (!petWeightVal) return; const petWeightNum = parseFloat(petWeightVal); if (isNaN(petWeightNum) || petWeightNum < 0.5 || petWeightNum > 100) { setError("體重請填寫 0.5-100 之間的數字（公斤）", petWeight); return resetSubmit() } if (!getRadio("petSex")) { setError("請選擇：性別"); return resetSubmit() } if (!getRadio("petType")) { setError("請選擇：種類"); return resetSubmit() } if (!getRadio("chipHas")) { setError("請選擇：晶片有無"); return resetSubmit() } if (!getRadio("neuterStatus")) { setError("請選擇：絕育狀況"); return resetSubmit() } const petTemperament = getPetTemperament(); if (!petTemperament.length) { setError("請至少勾選一項：寵物個性"); return resetSubmit() } if (!medicalHistory.length) { setError("請至少勾選一項：寵物病史"); return resetSubmit() } if (medicalHistory.includes("其他應注意") && otherInjuryNote === "") { setError("請填寫其他應注意事項內容", otherText); return } if (!getRadio("vetMode")) { setError("請選擇：緊急就醫機構"); return resetSubmit() } if (vetMode === "甲方指定") { if (!finalVetName) { setError("請填寫：動物醫院名稱", vetName); return resetSubmit() } if (!finalVetPhone) { setError("請填寫：動物醫院電話", vetPhone); return resetSubmit() } if (!finalVetAddress) { setError("請填寫：動物醫院地址", vetAddress); return resetSubmit() } } const signDateVal = requireValue(signDate, "簽署日期"); if (!signDateVal) return; const petBirthdayVal = String(petBirthday?.value || "").trim(); if (petBirthdayVal !== "" && !/^\d{4}\/\d{2}\/\d{2}$/.test(petBirthdayVal)) { setError("寵物生日格式不正確，請使用 YYYY/MM/DD 格式或不填", petBirthday); return resetSubmit() } const data = { ownerName: ownerNameVal, ownerPhone: ownerPhoneVal, ownerAddress: ownerAddressVal, emergencyName: emergencyNameVal, emergencyPhone: emergencyPhoneVal, ownerEmail: ownerEmailVal, ownerIdNo: ownerIdNoVal, isOwnerSelf, ownerRelation: isOwnerSelf === "否" ? String(ownerRelation?.value || "").trim() : "", petName: petNameVal, petBreed: petBreedVal, petSex: getRadio("petSex") || "男生", petType: getRadio("petType") || "犬", petAge: petAgeDisplay, petBirthday: petBirthdayVal || "未提供", petWeight: petWeightVal, petTemperament, petTemperamentNote: String(petTemperamentNote?.value || "").trim(), chipHas, chipNo: chipHas === "有" ? String(chipNo?.value || "").trim() : "", neuterStatus, medicalHistory, otherInjuryNote, bodyChecks, vetMode, vetName: finalVetName, vetPhone: finalVetPhone, vetAddress: finalVetAddress, signDate: signDateVal, serviceWash, serviceWashOther: svcWashOtherDetail, serviceGroom, serviceExtra, serviceSingle, serviceOther: serviceOtherDetail, paymentDetails, payDate: String(payDate?.value || "").trim(), payTotal: payTotalText ? payTotalText.textContent : "$0", submittedAt: new Date().toISOString() };
-				setStep("📤 正在上傳資料到系統..."); const contractTextValue = document.getElementById("contractText")?.textContent || ""; const textMsg = `【犬貓美容契約簽署資料】\n甲方：${data.ownerName}\n電話：${data.ownerPhone}\n寵物：${data.petName}（${data.petBreed}）\n簽署日期：${data.signDate}`; const payload = { data, signatureDataUrl, line: { userId: "", displayName: "" }, contractText: contractTextValue, textMsg }; const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 90000); const gasRes = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(payload), signal: controller.signal });
-				clearTimeout(timeoutId); const gasText = await gasRes.text(); let gasJson; try { gasJson = JSON.parse(gasText) } catch (e) { throw new Error("伺服器回傳格式錯誤") } if (!gasRes.ok || !gasJson.ok) throw new Error(gasJson.error || "送出失敗");
-				submittedCount++;
-				updateSentCounter(); const saved = localStorage.getItem('petGroomingFormData'); if (saved) { try { const fd = JSON.parse(saved);
-						fd.submittedCount = submittedCount;
-						localStorage.setItem('petGroomingFormData', JSON.stringify(fd)) } catch (e) {} } showSuccessAnimation(); if (sb) { sb.classList.remove('btn-submitting');
-					sb.classList.add('btn-success');
-					sb.textContent = "✅ 送出成功！" } if (msg) { msg.textContent = "✅ 資料已成功送出！\n📧 副本已寄送至您的信箱！";
-					msg.style.color = "#5A9B7A" } showNextPetDialog(petNameVal, data.petType);
-				setTimeout(() => { if (sb) { sb.classList.remove('btn-success');
-						sb.disabled = false;
-						sb.textContent = "📨 送出此寵物" } }, 3000);
-				isSubmitting = false } catch (err) { if (err.name === "AbortError") setError("連線逾時，請檢查網路後再試一次");
-				else setError(err.message || "送出失敗，請稍後再試");
-				resetSubmit() } }
+  function requireValue(el, label) { 
+    if (!el) { setError("系統缺少欄位：" + label); return null } 
+    const v = String(el.value || "").trim(); 
+    if (!v) { setError("請填寫：" + label, el); return null } 
+    clearErrorStyle(el); 
+    return v 
+  } 
+  
+  try { 
+    if (!agree || !agree.checked) { setError("請先勾選同意契約內容", agree); return } 
+    if (!signatureDataUrl) { setError("請先完成簽名"); return } 
+    setStep("🔍 正在驗證簽名..."); 
+    if (await isSignatureEmpty(signatureDataUrl)) { setError("請在簽名區域確實簽名，不能為空白"); return } 
+    if (sb) { sb.disabled = true;
+      sb.classList.add('btn-submitting') 
+    } 
+    isSubmitting = true;
+    setStep("📝 正在檢查資料..."); 
+    const isOwnerSelf = getRadio("isOwnerSelf") || "是",
+          chipHas = getRadio("chipHas") || "有",
+          neuterStatus = getRadio("neuterStatus") || "已絕育",
+          vetMode = getRadio("vetMode") || "甲方指定"; 
+    const medicalHistory = getMedicalHistory(),
+          otherInjuryNote = otherInjury?.checked ? String(otherText?.value || "").trim() : "",
+          bodyChecks = getBodyChecks(); 
+    const serviceWash = getServiceDetailList(svcWashBoxes),
+          serviceGroom = getServiceDetailList(svcGroomBoxes),
+          serviceExtra = getServiceDetailList(svcExtraBoxes),
+          serviceSingle = getServiceDetailList(svcSingleBoxes),
+          paymentDetails = getPaymentDetailList(); 
+    const svcWashOtherDetail = svcWashOther?.checked ? { item: String(svcWashOtherText?.value || "").trim() ? `其他：${svcWashOtherText.value.trim()}` : "其他", amount: String(svcWashOtherAmount?.value || "").trim() } : null; 
+    const serviceOtherDetail = String(serviceOtherNote?.value || "").trim() ? { item: String(serviceOtherNote.value).trim(), amount: String(serviceOtherAmount?.value || "").trim() } : null; 
+    const finalVetName = vetMode === "乙方指定" ? STORE_VET.name : String(vetName?.value || "").trim(),
+          finalVetPhone = vetMode === "乙方指定" ? STORE_VET.phone : String(vetPhone?.value || "").trim(),
+          finalVetAddress = vetMode === "乙方指定" ? STORE_VET.address : String(vetAddress?.value || "").trim(); 
+    const ownerNameVal = requireValue(ownerName, "甲方姓名"); if (!ownerNameVal) return; 
+    const ownerIdNoVal = requireValue(ownerIdNo, "身分證字號/居留證號"); if (!ownerIdNoVal) return; 
+    if (!validateIdNumber(ownerIdNoVal)) { setError("身分證字號/居留證號格式不正確", ownerIdNo); return resetSubmit() } 
+    const ownerPhoneVal = requireValue(ownerPhone, "聯絡電話"); if (!ownerPhoneVal) return; 
+    if (!validatePhone(ownerPhoneVal)) { setError("聯絡電話格式不正確（範例：0912345678 或 07-1234567）", ownerPhone); return resetSubmit() } 
+    const ownerAddressVal = requireValue(ownerAddress, "通訊地址"); if (!ownerAddressVal) return; 
+    const emergencyNameVal = requireValue(emergencyName, "緊急聯絡人"); if (!emergencyNameVal) return; 
+    const emergencyPhoneVal = requireValue(emergencyPhone, "緊急聯絡人電話"); if (!emergencyPhoneVal) return; 
+    if (!validatePhone(emergencyPhoneVal)) { setError("緊急聯絡人電話格式不正確", emergencyPhone); return resetSubmit() } 
+    
+    const ownerEmailVal = String(ownerEmail?.value || "").trim();
+const ownerEmailConfirmVal = String(document.getElementById("ownerEmailConfirm")?.value || "").trim();
+
+// 有填 Email 才需要驗證
+if (ownerEmailVal !== "") {
+  if (!isValidEmail(ownerEmailVal)) {
+    setError("Email 格式不正確（範例：name@domain.com）", ownerEmail);
+    return resetSubmit()
+  }
+  if (ownerEmailVal !== ownerEmailConfirmVal) {
+    if (emailErrorMsg) emailErrorMsg.style.display = "block";
+    setError("兩次輸入的信箱不一致，請確認", document.getElementById("ownerEmailConfirm"));
+    return resetSubmit()
+  } else {
+    if (emailErrorMsg) emailErrorMsg.style.display = "none";
+  }
+}
+    
+    if (isOwnerSelf === "否") { const rel = requireValue(ownerRelation, "與飼主關係"); if (!rel) return } 
+    const petNameVal = requireValue(petName, "寵物姓名"); if (!petNameVal) return; 
+    const petBreedVal = requireValue(petBreed, "寵物品種"); if (!petBreedVal) return; 
+    const petAgeYearsVal = requireValue(petAgeYears, "寵物年齡(歲)"); if (!petAgeYearsVal) return; 
+    const petAgeYearsNum = parseInt(petAgeYearsVal); 
+    if (isNaN(petAgeYearsNum) || petAgeYearsNum < 0 || petAgeYearsNum > 50) { setError("寵物歲數請填寫 0-50 之間的數字", petAgeYears); return resetSubmit() } 
+    let petAgeDisplay = `${petAgeYearsNum}歲`; 
+    if (petAgeMonths && petAgeMonths.value.trim() !== "") { 
+      const petAgeMonthsNum = parseInt(petAgeMonths.value.trim()); 
+      if (isNaN(petAgeMonthsNum) || petAgeMonthsNum < 0 || petAgeMonthsNum > 11) { setError("寵物月數請填寫 0-11 之間的數字", petAgeMonths); return resetSubmit() } 
+      if (petAgeMonthsNum > 0) petAgeDisplay = `${petAgeYearsNum}歲${petAgeMonthsNum}個月` 
+    } 
+    const petWeightVal = requireValue(petWeight, "體重"); if (!petWeightVal) return; 
+    const petWeightNum = parseFloat(petWeightVal); 
+    if (isNaN(petWeightNum) || petWeightNum < 0.5 || petWeightNum > 100) { setError("體重請填寫 0.5-100 之間的數字（公斤）", petWeight); return resetSubmit() } 
+    if (!getRadio("petSex")) { setError("請選擇：性別"); return resetSubmit() } 
+    if (!getRadio("petType")) { setError("請選擇：種類"); return resetSubmit() } 
+    if (!getRadio("chipHas")) { setError("請選擇：晶片有無"); return resetSubmit() } 
+    if (!getRadio("neuterStatus")) { setError("請選擇：絕育狀況"); return resetSubmit() } 
+    const petTemperament = getPetTemperament(); 
+    if (!petTemperament.length) { setError("請至少勾選一項：寵物個性"); return resetSubmit() } 
+    if (!medicalHistory.length) { setError("請至少勾選一項：寵物病史"); return resetSubmit() } 
+    if (medicalHistory.includes("其他應注意") && otherInjuryNote === "") { setError("請填寫其他應注意事項內容", otherText); return } 
+    if (!getRadio("vetMode")) { setError("請選擇：緊急就醫機構"); return resetSubmit() } 
+    if (vetMode === "甲方指定") { 
+      if (!finalVetName) { setError("請填寫：動物醫院名稱", vetName); return resetSubmit() } 
+      if (!finalVetPhone) { setError("請填寫：動物醫院電話", vetPhone); return resetSubmit() } 
+      if (!finalVetAddress) { setError("請填寫：動物醫院地址", vetAddress); return resetSubmit() } 
+    } 
+    const signDateVal = requireValue(signDate, "簽署日期"); if (!signDateVal) return; 
+    const petBirthdayVal = String(petBirthday?.value || "").trim(); 
+    if (petBirthdayVal !== "" && !/^\d{4}\/\d{2}\/\d{2}$/.test(petBirthdayVal)) { setError("寵物生日格式不正確，請使用 YYYY/MM/DD 格式或不填", petBirthday); return resetSubmit() } 
+    const data = { ownerName: ownerNameVal, ownerPhone: ownerPhoneVal, ownerAddress: ownerAddressVal, emergencyName: emergencyNameVal, emergencyPhone: emergencyPhoneVal, ownerEmail: ownerEmailVal, ownerIdNo: ownerIdNoVal, isOwnerSelf, ownerRelation: isOwnerSelf === "否" ? String(ownerRelation?.value || "").trim() : "", petName: petNameVal, petBreed: petBreedVal, petSex: getRadio("petSex") || "男生", petType: getRadio("petType") || "犬", petAge: petAgeDisplay, petBirthday: petBirthdayVal || "未提供", petWeight: petWeightVal, petTemperament, petTemperamentNote: String(petTemperamentNote?.value || "").trim(), chipHas, chipNo: chipHas === "有" ? String(chipNo?.value || "").trim() : "", neuterStatus, medicalHistory, otherInjuryNote, bodyChecks, vetMode, vetName: finalVetName, vetPhone: finalVetPhone, vetAddress: finalVetAddress, signDate: signDateVal, serviceWash, serviceWashOther: svcWashOtherDetail, serviceGroom, serviceExtra, serviceSingle, serviceOther: serviceOtherDetail, paymentDetails, payDate: String(payDate?.value || "").trim(), payTotal: payTotalText ? payTotalText.textContent : "$0", submittedAt: new Date().toISOString() };
+    setStep("📤 正在上傳資料到系統..."); 
+    const contractTextValue = document.getElementById("contractText")?.textContent || ""; 
+    const textMsg = `【犬貓美容契約簽署資料】\n甲方：${data.ownerName}\n電話：${data.ownerPhone}\n寵物：${data.petName}（${data.petBreed}）\n簽署日期：${data.signDate}`; 
+    const payload = { data, signatureDataUrl, line: { userId: "", displayName: "" }, contractText: contractTextValue, textMsg }; 
+    const controller = new AbortController(); 
+    const timeoutId = setTimeout(() => controller.abort(), 90000); 
+    const gasRes = await fetch(GOOGLE_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(payload), signal: controller.signal });
+    clearTimeout(timeoutId); 
+    const gasText = await gasRes.text(); 
+    let gasJson; 
+    try { gasJson = JSON.parse(gasText) } catch (e) { throw new Error("伺服器回傳格式錯誤") } 
+    if (!gasRes.ok || !gasJson.ok) throw new Error(gasJson.error || "送出失敗");
+    submittedCount++;
+    updateSentCounter(); 
+    const saved = localStorage.getItem('petGroomingFormData'); 
+    if (saved) { try { const fd = JSON.parse(saved);
+        fd.submittedCount = submittedCount;
+        localStorage.setItem('petGroomingFormData', JSON.stringify(fd)) } catch (e) {} } 
+    showSuccessAnimation(); 
+    if (sb) { sb.classList.remove('btn-submitting');
+      sb.classList.add('btn-success');
+      sb.textContent = "✅ 送出成功！" } 
+    if (msg) { msg.textContent = "✅ 資料已成功送出！\n📧 副本已寄送至您的信箱！";
+      msg.style.color = "#5A9B7A" } 
+    showNextPetDialog(petNameVal, data.petType);
+    setTimeout(() => { if (sb) { sb.classList.remove('btn-success');
+        sb.disabled = false;
+        sb.textContent = "📨 送出此寵物" } }, 3000);
+    isSubmitting = false 
+  } catch (err) { 
+    if (err.name === "AbortError") setError("連線逾時，請檢查網路後再試一次");
+    else setError(err.message || "送出失敗，請稍後再試");
+    resetSubmit() 
+  } 
+}
 		const modal = document.getElementById('signatureModal'),
 			modalCanvas = document.getElementById('modalSig'),
 			openBtn = document.getElementById('openSignatureBtn'),
@@ -1495,7 +1637,23 @@
 			img.onload = () => { lc.innerHTML = `<img src="logo.png" alt="店家 LOGO">` };
 			img.onerror = () => { lc.innerHTML = `<div class="logoError">🐾</div>` };
 			img.src = 'logo.png' }
-		document.addEventListener("DOMContentLoaded", function() { handleLogo();
+		document.addEventListener("DOMContentLoaded", function() { // Email 動態確認（有填才顯示確認欄位）
+const emailInput = document.getElementById('ownerEmail');
+const emailConfirmWrap = document.getElementById('emailConfirmWrap');
+const emailConfirmInput = document.getElementById('ownerEmailConfirm');
+const emailErrorMsg = document.getElementById('emailErrorMsg');
+
+if (emailInput) {
+  emailInput.addEventListener('input', function() {
+    if (emailInput.value.trim() !== '') {
+      emailConfirmWrap.style.display = 'block';
+    } else {
+      emailConfirmWrap.style.display = 'none';
+      if (emailConfirmInput) emailConfirmInput.value = '';
+      if (emailErrorMsg) emailErrorMsg.style.display = 'none';
+    }
+  });
+} handleLogo();
 			document.getElementById('signDate').value = todayYMD();
 			document.getElementById('submit').addEventListener('click', handleSubmit);
 			window.addEventListener('online', updateNetworkStatus);
